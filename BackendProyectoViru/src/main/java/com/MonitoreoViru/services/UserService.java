@@ -4,7 +4,6 @@ import com.MonitoreoViru.config.ViruProperties;
 import com.MonitoreoViru.dto.SignUpAdminRequestDTO;
 import com.MonitoreoViru.dto.UserResponseDTO;
 import com.MonitoreoViru.mapper.UserMapper;
-import com.MonitoreoViru.models.Administrador;
 import com.MonitoreoViru.models.Role;
 import com.MonitoreoViru.models.User;
 import com.MonitoreoViru.repository.UserRepository;

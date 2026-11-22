@@ -1,5 +1,6 @@
 package com.MonitoreoViru.config;
 
+import com.MonitoreoViru.exceptions.RecursoNoEncontradoException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     ResponseEntity<Map<String, String>> badCredentials(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+    }
+
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    ResponseEntity<Map<String, String>> notFound(RecursoNoEncontradoException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
