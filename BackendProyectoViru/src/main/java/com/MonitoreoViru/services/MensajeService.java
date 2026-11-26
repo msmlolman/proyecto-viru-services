@@ -5,6 +5,7 @@ import com.MonitoreoViru.dto.MensajeEnviadoDTO;
 import com.MonitoreoViru.exceptions.RecursoNoEncontradoException;
 import com.MonitoreoViru.models.AlcanceMensaje;
 import com.MonitoreoViru.models.Agricultor;
+import com.MonitoreoViru.models.Dispositivo;
 import com.MonitoreoViru.models.Entrega;
 import com.MonitoreoViru.models.JuntaRegante;
 import com.MonitoreoViru.models.Mensaje;
@@ -19,7 +20,9 @@ import com.MonitoreoViru.repository.RegionRepository;
 import com.MonitoreoViru.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -33,19 +36,22 @@ public class MensajeService {
     private final JuntaReganteRepository juntaReganteRepository;
     private final RegionRepository regionRepository;
     private final UserRepository userRepository;
+    private final JdbcClient jdbc;
 
     public MensajeService(MensajeRepository mensajeRepository,
                           EntregaRepository entregaRepository,
                           AgricultorRepository agricultorRepository,
                           JuntaReganteRepository juntaReganteRepository,
                           RegionRepository regionRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          JdbcClient jdbc) {
         this.mensajeRepository = mensajeRepository;
         this.entregaRepository = entregaRepository;
         this.agricultorRepository = agricultorRepository;
         this.juntaReganteRepository = juntaReganteRepository;
         this.regionRepository = regionRepository;
         this.userRepository = userRepository;
+        this.jdbc = jdbc;
     }
 
     @Transactional
@@ -75,16 +81,36 @@ public class MensajeService {
                 autor, req.tipo(), req.alcance(), junta, region,
                 req.riegoEn(), req.nota(), Instant.now()));
 
-        entregaRepository.saveAll(destinatarios.stream()
-                .map(a -> new Entrega(mensaje, a))
-                .toList());
+        guardarEntregas(mensaje, destinatarios);
 
         return new MensajeEnviadoDTO(
                 mensaje.getId(), mensaje.getTipo(), mensaje.getAlcance(),
                 destinatarios.size(), mensaje.getCreadoEn());
     }
 
+    @Transactional
+    public void alertaCaudal(Dispositivo canal, String nombreCanal, BigDecimal litros,
+                             BigDecimal umbral, Instant medidoEn, boolean simulada) {
+        String nota = "%s (%s) reportó %s L/s. Umbral alto: %s L/s.".formatted(
+                nombreCanal, canal.getCodigo(), litros.stripTrailingZeros().toPlainString(),
+                umbral.stripTrailingZeros().toPlainString());
+        Mensaje mensaje = mensajeRepository.save(
+                Mensaje.caudalAlto(canal, litros, umbral, medidoEn, simulada, nota));
+        guardarEntregas(mensaje, agricultorRepository.destinatariosDeCanal(canal.getId()));
+        jdbc.sql("""
+                INSERT INTO correo_alerta (entrega_id)
+                SELECT id FROM entrega WHERE mensaje_id = :id
+                """).param("id", mensaje.getId()).update();
+    }
+
+    private void guardarEntregas(Mensaje mensaje, List<Agricultor> destinatarios) {
+        entregaRepository.saveAll(destinatarios.stream().map(a -> new Entrega(mensaje, a)).toList());
+    }
+
     private void validarCoherencia(EnviarMensajeRequestDTO req) {
+        if (req.alcance() == AlcanceMensaje.CANAL) {
+            throw new IllegalArgumentException("El alcance CANAL se usa en alertas automáticas.");
+        }
         if (req.tipo() == TipoMensaje.HORA_RIEGO) {
             if (req.riegoEn() == null) {
                 throw new IllegalArgumentException("riegoEn es obligatorio para HORA_RIEGO.");
