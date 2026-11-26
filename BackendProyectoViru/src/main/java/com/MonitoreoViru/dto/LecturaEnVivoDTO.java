@@ -13,5 +13,7 @@ public record LecturaEnVivoDTO(
         TipoDispositivo tipo,
         Instant medidoEn,
         EstadoTransmision estado,
-        List<VariableDTO> variables
+        List<VariableDTO> variables,
+        boolean simulada,
+        EstadoCaudalDTO caudal
 ) {}

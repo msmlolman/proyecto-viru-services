@@ -15,5 +15,8 @@ public record DispositivoEstadoDTO(
         String ubicacion,
         EstadoSenal senal,
         Instant medidoEn,
-        List<VariableDTO> variables
+        List<VariableDTO> variables,
+        String nombreCanal,
+        Boolean simulada,
+        EstadoCaudalDTO caudal
 ) {}
