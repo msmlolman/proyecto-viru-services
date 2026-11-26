@@ -1,6 +1,7 @@
 package com.MonitoreoViru.dto;
 
 import com.MonitoreoViru.models.Entrega;
+import com.MonitoreoViru.models.Mensaje;
 import com.MonitoreoViru.models.TipoMensaje;
 
 import java.time.Instant;
@@ -12,15 +13,22 @@ public record NotificacionDTO(
         Instant riegoEn,
         String nota,
         Instant creadoEn,
-        boolean leido
+        boolean leido,
+        String canalCodigo,
+        boolean simulada,
+        Instant medidoEn
 ) {
     public static NotificacionDTO from(Entrega e) {
+        Mensaje mensaje = e.getMensaje();
         return new NotificacionDTO(
                 e.getId(),
-                e.getMensaje().getTipo(),
-                e.getMensaje().getRiegoEn(),
-                e.getMensaje().getNota(),
-                e.getMensaje().getCreadoEn(),
-                e.getLeidoEn() != null);
+                mensaje.getTipo(),
+                mensaje.getRiegoEn(),
+                mensaje.getNota(),
+                mensaje.getCreadoEn(),
+                e.getLeidoEn() != null,
+                mensaje.getCanal() == null ? null : mensaje.getCanal().getCodigo(),
+                mensaje.isSimulada(),
+                mensaje.getMedidoEn());
     }
 }

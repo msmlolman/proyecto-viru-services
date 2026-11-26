@@ -13,10 +13,10 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
 
     /** A farmer's inbox, newest first. */
     @Query("""
-            select e from Entrega e join fetch e.mensaje m
+            select e from Entrega e join fetch e.mensaje m left join fetch m.canal
             where e.agricultor.id = :agricultorId
               and (:soloNoLeidas = false or e.leidoEn is null)
-            order by m.creadoEn desc
+            order by m.creadoEn desc, e.id desc
             """)
     List<Entrega> bandeja(@Param("agricultorId") Long agricultorId,
                           @Param("soloNoLeidas") boolean soloNoLeidas,

@@ -2,6 +2,7 @@ package com.MonitoreoViru.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.servlet.DispatcherType;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -46,6 +47,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // SSE streams re-enter the filter chain on async dispatch; don't re-authorize those
                         .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/catalogo/riego").permitAll()
                         // AuthController is mapped to /api/users (the old rule said /api/auth/** and blocked login)
                         .requestMatchers("/api/users/login", "/api/users/register/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

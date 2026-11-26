@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -16,8 +17,8 @@ public class Mensaje {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "autor_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "autor_id")
     private User autor;
 
     @Enumerated(EnumType.STRING)
@@ -35,6 +36,22 @@ public class Mensaje {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "region_id")
     private Region region;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "canal_id")
+    private Dispositivo canal;
+
+    @Column(nullable = false)
+    private boolean simulada;
+
+    @Column(name = "medido_en")
+    private Instant medidoEn;
+
+    @Column(name = "caudal_lps", precision = 17, scale = 4)
+    private BigDecimal caudalLitros;
+
+    @Column(name = "umbral_lps", precision = 14, scale = 4)
+    private BigDecimal umbralLitros;
 
     @Column(name = "riego_en")
     private Instant riegoEn;
@@ -55,5 +72,17 @@ public class Mensaje {
         this.riegoEn = riegoEn;
         this.nota = nota;
         this.creadoEn = creadoEn;
+    }
+
+    public static Mensaje caudalAlto(Dispositivo canal, BigDecimal litros, BigDecimal umbral,
+                                    Instant medidoEn, boolean simulada, String nota) {
+        Mensaje mensaje = new Mensaje(null, TipoMensaje.ALERTA_ALTO_CAUDAL, AlcanceMensaje.CANAL,
+                null, null, null, nota, Instant.now());
+        mensaje.canal = canal;
+        mensaje.caudalLitros = litros;
+        mensaje.umbralLitros = umbral;
+        mensaje.medidoEn = medidoEn;
+        mensaje.simulada = simulada;
+        return mensaje;
     }
 }

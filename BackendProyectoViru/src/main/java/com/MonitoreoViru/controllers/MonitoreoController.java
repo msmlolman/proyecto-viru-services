@@ -1,11 +1,14 @@
 package com.MonitoreoViru.controllers;
 
 import com.MonitoreoViru.dto.DispositivoEstadoDTO;
+import com.MonitoreoViru.dto.MuestraDTO;
 import com.MonitoreoViru.services.LiveStreamService;
 import com.MonitoreoViru.services.MonitoreoService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -28,6 +31,11 @@ public class MonitoreoController {
     @GetMapping("/dispositivos/estado")
     public List<DispositivoEstadoDTO> estado() {
         return monitoreoService.estadoActual();
+    }
+
+    @GetMapping("/dispositivos/{id}/historial")
+    public List<MuestraDTO> historial(@PathVariable Long id, @RequestParam(defaultValue = "60") int limite) {
+        return monitoreoService.historial(id, limite);
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

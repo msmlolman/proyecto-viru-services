@@ -27,6 +27,8 @@ public record IngestRequestDTO(
 
         Instant recibidoEn,
 
+        Boolean simulada,
+
         @NotEmpty(message = "{validation.required}")
         List<@Valid VariableDTO> variables
 ) {}

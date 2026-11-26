@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface DispositivoRepository extends JpaRepository<Dispositivo, Long> {
@@ -14,6 +15,8 @@ public interface DispositivoRepository extends JpaRepository<Dispositivo, Long> 
     Optional<Dispositivo> findByDevEuiIgnoreCaseAndActivoTrue(String devEui);
 
     List<Dispositivo> findByActivoTrueOrderByCodigoAsc();
+
+    List<Dispositivo> findByIdInAndActivoTrueOrderByCodigoAsc(Collection<Long> ids);
 
     /** Active devices that currently have no PENDIENTE slot (new device, or first run). */
     @Query("""
