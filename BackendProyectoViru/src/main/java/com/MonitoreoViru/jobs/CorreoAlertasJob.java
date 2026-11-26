@@ -21,7 +21,7 @@ public class CorreoAlertasJob {
     private static final Logger log = LoggerFactory.getLogger(CorreoAlertasJob.class);
     private static final int MAX_INTENTOS = 4;
 
-    private record Pendiente(Long id, int intentos, String correo, String nota, String canal,
+    private record Pendiente(Long id, int intentos, String correo, String nota, String canal, String tipo,
                              OffsetDateTime medidoEn, boolean simulada) {}
 
     private final JdbcClient jdbc;
@@ -46,7 +46,7 @@ public class CorreoAlertasJob {
     @Transactional
     public void procesar() {
         var pendientes = jdbc.sql("""
-                SELECT q.entrega_id AS id, q.intentos, u.correo, m.nota, d.codigo AS canal,
+                SELECT q.entrega_id AS id, q.intentos, u.correo, m.nota, d.codigo AS canal, m.tipo,
                        m.medido_en, m.simulada
                 FROM correo_alerta q
                 JOIN entrega e ON e.id = q.entrega_id
@@ -70,8 +70,9 @@ public class CorreoAlertasJob {
         SimpleMailMessage mensaje = new SimpleMailMessage();
         mensaje.setFrom(remitente);
         mensaje.setTo(pendiente.simulada() ? destinoPrueba : pendiente.correo());
+        String caudal = "ALERTA_BAJO_CAUDAL".equals(pendiente.tipo()) ? "Caudal bajo" : "Caudal alto";
         mensaje.setSubject((pendiente.simulada() ? "[Simulación] " : "")
-                + "Riego Virú · Caudal alto en " + pendiente.canal());
+                + "Riego Virú · " + caudal + " en " + pendiente.canal());
         mensaje.setText((pendiente.simulada() ? "Prueba de laboratorio de Riego Virú.\n\n" : "Riego Virú\n\n")
                 + pendiente.nota() + "\nMedición: " + pendiente.medidoEn().toInstant() + " (UTC).\n"
                 + "Consulta el aviso en la bandeja de Riego Virú.");

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "dispositivo")
 @Getter
@@ -43,4 +45,8 @@ public class Dispositivo {
 
     @Column(nullable = false)
     private boolean activo;
+
+    public Instant vigenciaDe(Instant medicion) {
+        return medicion.plusSeconds((long) intervaloSegundos + toleranciaSegundos);
+    }
 }

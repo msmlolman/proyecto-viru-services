@@ -23,13 +23,26 @@ public class CanalRepository {
     public record ClaveRegla(Long canalId, boolean simulada) {}
 
     public record Regla(ClaveRegla clave, BigDecimal umbralAlto, BigDecimal retorno,
-                        boolean enAlerta, Instant ultimaMedicion) {}
+                        BigDecimal umbralBajo, BigDecimal retornoBajo, boolean enAlerta,
+                        boolean enAlertaBaja, Instant ultimaMedicion) {
+
+        public boolean alto(BigDecimal caudal) {
+            return enAlerta ? caudal.compareTo(retorno) > 0 : caudal.compareTo(umbralAlto) >= 0;
+        }
+
+        public boolean bajo(BigDecimal caudal) {
+            return umbralBajo != null && (enAlertaBaja
+                    ? caudal.compareTo(retornoBajo) < 0 : caudal.compareTo(umbralBajo) <= 0);
+        }
+    }
 
     private static final RowMapper<Regla> REGLA = (rs, row) -> {
         OffsetDateTime ultima = rs.getObject("ultima_medicion", OffsetDateTime.class);
         return new Regla(new ClaveRegla(rs.getLong("canal_id"), rs.getBoolean("simulada")),
                 rs.getBigDecimal("umbral_alto_lps"), rs.getBigDecimal("retorno_lps"),
-                rs.getBoolean("en_alerta"), ultima == null ? null : ultima.toInstant());
+                rs.getBigDecimal("umbral_bajo_lps"), rs.getBigDecimal("retorno_bajo_lps"),
+                rs.getBoolean("en_alerta"), rs.getBoolean("en_alerta_baja"),
+                ultima == null ? null : ultima.toInstant());
     };
 
     private final JdbcClient jdbc;
@@ -46,6 +59,15 @@ public class CanalRepository {
                 """).query(Canal.class).list();
     }
 
+    public List<Long> idsDeComision(Integer juntaId) {
+        return jdbc.sql("""
+                SELECT DISTINCT pc.canal_id
+                FROM agricultor a JOIN predio p ON p.agricultor_id = a.id
+                JOIN predio_canal pc ON pc.predio_id = p.id
+                WHERE a.junta_regante_id = :juntaId
+                """).param("juntaId", juntaId).query(Long.class).list();
+    }
+
     public Map<ClaveRegla, Regla> reglas(Collection<Long> ids) {
         return jdbc.sql("SELECT * FROM regla_caudal WHERE canal_id IN (:ids)")
                 .param("ids", ids).query(REGLA).list().stream()
@@ -59,11 +81,12 @@ public class CanalRepository {
                 """).param("id", canalId).param("simulada", simulada).query(REGLA).optional();
     }
 
-    public void registrarEstado(ClaveRegla clave, boolean alto, Instant medidoEn) {
+    public void registrarEstado(ClaveRegla clave, boolean alto, boolean bajo, Instant medidoEn) {
         jdbc.sql("""
-                UPDATE regla_caudal SET en_alerta = :alto, ultima_medicion = :medidoEn
+                UPDATE regla_caudal
+                SET en_alerta = :alto, en_alerta_baja = :bajo, ultima_medicion = :medidoEn
                 WHERE canal_id = :id AND simulada = :simulada
-                """).param("alto", alto).param("medidoEn", medidoEn.atOffset(ZoneOffset.UTC))
+                """).param("alto", alto).param("bajo", bajo).param("medidoEn", medidoEn.atOffset(ZoneOffset.UTC))
                 .param("id", clave.canalId()).param("simulada", clave.simulada()).update();
     }
 

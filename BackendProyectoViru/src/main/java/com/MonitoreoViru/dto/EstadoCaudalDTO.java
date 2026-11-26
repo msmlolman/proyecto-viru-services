@@ -9,12 +9,14 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public record EstadoCaudalDTO(BigDecimal litrosPorSegundo, BigDecimal umbralAlto, Boolean alto) {
+public record EstadoCaudalDTO(BigDecimal litrosPorSegundo, BigDecimal umbralAlto, Boolean alto,
+                              BigDecimal umbralBajo, Boolean bajo) {
 
     public static EstadoCaudalDTO de(BigDecimal litros, Regla regla) {
         return new EstadoCaudalDTO(litros, regla == null ? null : regla.umbralAlto(),
-                regla == null || litros == null ? null
-                        : regla.enAlerta() || litros.compareTo(regla.umbralAlto()) >= 0);
+                regla == null || litros == null ? null : regla.alto(litros),
+                regla == null ? null : regla.umbralBajo(),
+                regla == null || litros == null || regla.umbralBajo() == null ? null : regla.bajo(litros));
     }
 
     public static Optional<BigDecimal> litros(List<VariableDTO> variables) {

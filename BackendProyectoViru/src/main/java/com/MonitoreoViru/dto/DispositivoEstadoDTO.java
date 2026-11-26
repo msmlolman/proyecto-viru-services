@@ -18,5 +18,6 @@ public record DispositivoEstadoDTO(
         List<VariableDTO> variables,
         String nombreCanal,
         Boolean simulada,
-        EstadoCaudalDTO caudal
+        EstadoCaudalDTO caudal,
+        Instant vigenteHasta
 ) {}

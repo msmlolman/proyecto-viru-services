@@ -89,13 +89,16 @@ public class MensajeService {
     }
 
     @Transactional
-    public void alertaCaudal(Dispositivo canal, String nombreCanal, BigDecimal litros,
+    public void alertaCaudal(Dispositivo canal, String nombreCanal, TipoMensaje tipo, BigDecimal litros,
                              BigDecimal umbral, Instant medidoEn, boolean simulada) {
-        String nota = "%s (%s) reportó %s L/s. Umbral alto: %s L/s.".formatted(
+        boolean alto = tipo == TipoMensaje.ALERTA_ALTO_CAUDAL;
+        String accion = alto ? "Revisa el canal antes de iniciar el turno."
+                             : "Verifica el abastecimiento con tu comisión antes del turno.";
+        String nota = "%s (%s) reportó %s L/s. Umbral %s de %s L/s. %s".formatted(
                 nombreCanal, canal.getCodigo(), litros.stripTrailingZeros().toPlainString(),
-                umbral.stripTrailingZeros().toPlainString());
+                alto ? "alto" : "bajo", umbral.stripTrailingZeros().toPlainString(), accion);
         Mensaje mensaje = mensajeRepository.save(
-                Mensaje.caudalAlto(canal, litros, umbral, medidoEn, simulada, nota));
+                Mensaje.alertaCaudal(canal, tipo, litros, umbral, medidoEn, simulada, nota));
         guardarEntregas(mensaje, agricultorRepository.destinatariosDeCanal(canal.getId()));
         jdbc.sql("""
                 INSERT INTO correo_alerta (entrega_id)

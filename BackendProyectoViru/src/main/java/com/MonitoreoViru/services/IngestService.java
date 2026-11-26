@@ -88,7 +88,7 @@ public class IngestService {
         transmisionRepository.save(Transmision.pendiente(
                 dispositivo, recibidoNube.plusSeconds(dispositivo.getIntervaloSegundos())));
 
-        var caudal = alertas.evaluar(dispositivo, req.variables(), medidoEn, simulada);
+        var caudal = alertas.evaluar(dispositivo, req.variables(), medidoEn, simulada, ahora);
 
         // Delivered to LiveStreamService only after this transaction commits
         events.publishEvent(new LecturaEnVivoDTO(
@@ -99,6 +99,7 @@ public class IngestService {
                 slot.getEstado(),
                 req.variables(),
                 simulada,
-                caudal));
+                caudal,
+                dispositivo.vigenciaDe(medidoEn)));
     }
 }
