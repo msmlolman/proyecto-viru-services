@@ -47,9 +47,12 @@ CROSS JOIN LATERAL (
 ) AS v(nombre, valor, unidad)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO regla_caudal (canal_id, simulada, umbral_alto_lps, retorno_lps)
-SELECT dispositivo_id, true, 120, 105 FROM canal
-ON CONFLICT DO NOTHING;
+INSERT INTO regla_caudal (canal_id, simulada, umbral_alto_lps, retorno_lps,
+                         umbral_bajo_lps, retorno_bajo_lps)
+SELECT dispositivo_id, true, 120, 105, 35, 45 FROM canal
+ON CONFLICT (canal_id, simulada) DO UPDATE
+SET umbral_bajo_lps = excluded.umbral_bajo_lps, retorno_bajo_lps = excluded.retorno_bajo_lps
+WHERE regla_caudal.umbral_bajo_lps IS NULL AND regla_caudal.retorno_lps >= excluded.retorno_bajo_lps;
 
 SELECT count(DISTINCT dispositivo_id) AS sensores,
        count(DISTINCT (dispositivo_id, medido_en)) AS muestras,
