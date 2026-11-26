@@ -1,5 +1,6 @@
 package com.MonitoreoViru.services;
 
+import com.MonitoreoViru.dto.CanalMapaDTO;
 import com.MonitoreoViru.dto.DispositivoEstadoDTO;
 import com.MonitoreoViru.exceptions.RecursoNoEncontradoException;
 import com.MonitoreoViru.repository.AgricultorRepository;
@@ -29,7 +30,8 @@ public class PredioService {
     public record PredioFila(Long id, String codigo, String nombre, Long agricultorId,
                              Long canalId, String canalCodigo, String canalNombre) {}
     public record Panel(List<AgricultorItem> agricultores, List<Canal> canales, List<Predio> predios) {}
-    public record MisPredios(List<Predio> predios, List<DispositivoEstadoDTO> canales) {}
+    public record MisPredios(List<Predio> predios, List<DispositivoEstadoDTO> canales,
+                            String comision, List<CanalMapaDTO> canalesComision) {}
     public record RegionItem(Integer id, String nombre) {}
     public record JuntaItem(Integer id, String nombre, Integer regionId) {}
     public record Catalogo(List<RegionItem> regiones, List<JuntaItem> juntas) {}
@@ -67,11 +69,15 @@ public class PredioService {
 
     @Transactional(readOnly = true)
     public MisPredios misPredios(Long usuarioId) {
-        Long agricultorId = agricultores.findByUser_Id(usuarioId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Perfil de agricultor no encontrado")).getId();
-        var predios = predios(agricultorId);
-        var ids = predios.stream().flatMap(p -> p.canales().stream()).map(Canal::id).distinct().toList();
-        return new MisPredios(predios, monitoreo.estadoCanales(ids));
+        var agricultor = agricultores.findByUser_Id(usuarioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Perfil de agricultor no encontrado"));
+        var junta = agricultor.getJuntaRegante();
+        var predios = predios(agricultor.getId());
+        var propios = predios.stream().flatMap(p -> p.canales().stream()).map(Canal::id).collect(Collectors.toSet());
+        var estados = monitoreo.estadoCanales(canales.idsDeComision(junta.getId()));
+        var canalesPropios = estados.stream().filter(c -> propios.contains(c.dispositivoId())).toList();
+        var canalesComision = estados.stream().map(c -> CanalMapaDTO.de(c, propios.contains(c.dispositivoId()))).toList();
+        return new MisPredios(predios, canalesPropios, junta.getNombre(), canalesComision);
     }
 
     @Transactional

@@ -88,12 +88,13 @@ public class MonitoreoService {
             Instant medidoEn = lecturas.isEmpty() ? null : lecturas.get(0).getMedidoEn();
             Boolean simulada = lecturas.isEmpty() ? null : lecturas.get(0).getSimulada();
             List<VariableDTO> variables = variables(lecturas);
-            var regla = reglas.get(new ClaveRegla(d.getId(), Boolean.TRUE.equals(simulada)));
+            var regla = simulada == null ? null : reglas.get(new ClaveRegla(d.getId(), simulada));
             var caudal = EstadoCaudalDTO.de(EstadoCaudalDTO.litros(variables).orElse(null), regla);
 
             return new DispositivoEstadoDTO(
                     d.getId(), d.getCodigo(), d.getTipo(), d.getModelo(), d.getUbicacion(),
-                    senal, medidoEn, variables, nombres.get(d.getId()), simulada, caudal);
+                    senal, medidoEn, variables, nombres.get(d.getId()), simulada, caudal,
+                    medidoEn == null ? null : d.vigenciaDe(medidoEn));
         }).toList();
     }
 
