@@ -4,5 +4,6 @@ package com.MonitoreoViru.models;
 public enum TipoMensaje {
     HORA_RIEGO,           // "hora de riego a las: ..." (needs riego_en)
     ALERTA_BAJO_CAUDAL,
-    ALERTA_ALTO_CAUDAL
+    ALERTA_ALTO_CAUDAL,
+    ALERTA_METEOROLOGICA
 }

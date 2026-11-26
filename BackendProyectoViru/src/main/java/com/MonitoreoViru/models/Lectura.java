@@ -38,13 +38,17 @@ public class Lectura {
     @Column(name = "medido_en", nullable = false)
     private Instant medidoEn;
 
+    @Column
+    private Boolean simulada;
+
     public Lectura(Transmision transmision, Dispositivo dispositivo, String variable,
-                   BigDecimal valor, String unidad, Instant medidoEn) {
+                   BigDecimal valor, String unidad, Instant medidoEn, boolean simulada) {
         this.transmision = transmision;
         this.dispositivo = dispositivo;
         this.variable = variable;
         this.valor = valor;
         this.unidad = unidad;
         this.medidoEn = medidoEn;
+        this.simulada = simulada;
     }
 }
