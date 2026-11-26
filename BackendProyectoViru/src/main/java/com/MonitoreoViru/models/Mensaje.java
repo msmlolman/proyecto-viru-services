@@ -74,9 +74,9 @@ public class Mensaje {
         this.creadoEn = creadoEn;
     }
 
-    public static Mensaje caudalAlto(Dispositivo canal, BigDecimal litros, BigDecimal umbral,
-                                    Instant medidoEn, boolean simulada, String nota) {
-        Mensaje mensaje = new Mensaje(null, TipoMensaje.ALERTA_ALTO_CAUDAL, AlcanceMensaje.CANAL,
+    public static Mensaje alertaCaudal(Dispositivo canal, TipoMensaje tipo, BigDecimal litros, BigDecimal umbral,
+                                       Instant medidoEn, boolean simulada, String nota) {
+        Mensaje mensaje = new Mensaje(null, tipo, AlcanceMensaje.CANAL,
                 null, null, null, nota, Instant.now());
         mensaje.canal = canal;
         mensaje.caudalLitros = litros;
