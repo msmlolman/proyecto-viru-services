@@ -15,5 +15,6 @@ public record LecturaEnVivoDTO(
         EstadoTransmision estado,
         List<VariableDTO> variables,
         boolean simulada,
-        EstadoCaudalDTO caudal
+        EstadoCaudalDTO caudal,
+        Instant vigenteHasta
 ) {}
